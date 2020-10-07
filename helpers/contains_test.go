@@ -23,3 +23,22 @@ func TestContains(t *testing.T) {
 		}
 	}
 }
+
+func TestSliceContainsString(t *testing.T) {
+	entries := []struct {
+		arr     []string
+		element string
+		want    bool
+	}{
+		{[]string{"b", "a", "c"}, "a", true},
+		{[]string{"b", "a", "c"}, "g", false},
+	}
+
+	for _, entry := range entries {
+		got := SliceContainsString(entry.arr, entry.element)
+
+		if got != entry.want {
+			t.Errorf("Expected %v to be equal %v", got, entry.want)
+		}
+	}
+}
