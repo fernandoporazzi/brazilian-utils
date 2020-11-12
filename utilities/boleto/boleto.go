@@ -1,6 +1,7 @@
 package boleto
 
 import (
+	"fmt"
 	"log"
 	"strconv"
 	"strings"
@@ -30,6 +31,9 @@ var digitableLineToBoletoConvertPositions = []struct {
 	{10, 20},
 	{21, 31},
 }
+
+var dotIndexes = []int{4, 14, 25}
+var spaceIndexes = []int{9, 20, 31, 32}
 
 const (
 	length             = 47
@@ -161,4 +165,33 @@ func IsValid(digitableLine string) bool {
 	parsedDigits := parse(digits)
 
 	return isValidCheckDigit(parsedDigits)
+}
+
+// Format boleto (brazilian payment method)
+func Format(boleto string) string {
+	sliceAt := length
+
+	if len(boleto) < length {
+		sliceAt = len(boleto)
+	}
+
+	digits := helpers.OnlyNumbers(boleto)[0:sliceAt]
+
+	acc := ""
+
+	for i, digit := range digits {
+		acc = acc + fmt.Sprintf("%c", digit)
+
+		if helpers.IsLastChar(i, digits) == false {
+			if helpers.Contains(dotIndexes, i) {
+				acc = acc + "."
+			}
+
+			if helpers.Contains(spaceIndexes, i) {
+				acc = acc + " "
+			}
+		}
+	}
+
+	return acc
 }
