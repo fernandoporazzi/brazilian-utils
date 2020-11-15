@@ -23,8 +23,8 @@ func (a NameSorter) Less(i, j int) bool { return a[i].Name < a[j].Name }
 func GetStates() []State {
 	var output []State
 
-	for _, state := range data.States {
-		s := State{state.Code, state.Name}
+	for key, state := range data.States {
+		s := State{key, state.Name}
 		output = append(output, s)
 	}
 
