@@ -120,3 +120,43 @@ func TestIsValid(t *testing.T) {
 	})
 
 }
+
+func TestFormat(t *testing.T) {
+	t.Run("When CPF length does not match required length", func(t *testing.T) {
+		entries := []struct {
+			cpf  string
+		}{
+			{""},
+			{"403644788"},
+			{"123435"},
+			{"12343567890123456789"},
+		}
+
+		for _, entry := range entries {
+			_, err := Format(entry.cpf)
+
+			if err.Error() != "CPF length is not 11" {
+				t.Errorf("Expected error to be '%v', instead got '%v'", "CPF length is not 11", err.Error())
+			}
+		}
+	})
+
+	t.Run("When CPF length matches required length", func(t *testing.T) {
+		entries := []struct {
+			cpf  string
+			want string
+		}{
+			{"03136942017", "031.369.420-17"},
+			{"11133344455", "111.333.444-55"},
+			{"111a333b444c55", "111.333.444-55"},
+		}
+
+		for _, entry := range entries {
+			got, _ := Format(entry.cpf)
+
+			if got != entry.want {
+				t.Errorf("Expected formatted CPF to be '%v', but got '%v' instead", entry.want, got)
+			}
+		}
+	})
+}

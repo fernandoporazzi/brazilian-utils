@@ -4,11 +4,45 @@ import (
 	"fmt"
 	"regexp"
 	"strconv"
+	"errors"
 
 	"github.com/fernandoporazzi/brazilian-utils/helpers"
 )
 
+const (
+	length = 11
+)
+
 var checkDigitsIndexes = []int{9, 10}
+var dotIndexes = []int{2, 5}
+var hyphenIndexes = []int{8}
+
+// Format takes a string and returns a valid-formatted CPF
+func Format(cpf string) (string, error) {
+	digits := helpers.OnlyNumbers(cpf)
+
+	if len(digits) != length {
+		return "", errors.New("CPF length is not 11")
+	}
+
+	acc := ""
+
+	for i, digit := range digits {
+		acc = acc + fmt.Sprintf("%c", digit)
+
+		if !helpers.IsLastChar(i, digits) {
+			if helpers.Contains(dotIndexes, i) {
+				acc = acc + "."
+			}
+
+			if helpers.Contains(hyphenIndexes, i) {
+				acc = acc + "-"
+			}
+		}
+	}
+
+	return acc, nil
+}
 
 func isValidFormat(cpf string) bool {
 	r, _ := regexp.Compile(`(?m)^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$`)
