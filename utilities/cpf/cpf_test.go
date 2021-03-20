@@ -1,6 +1,8 @@
 package cpf
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestIsValid(t *testing.T) {
 	t.Run("When CPF length does not match required length", func(t *testing.T) {
@@ -124,7 +126,7 @@ func TestIsValid(t *testing.T) {
 func TestFormat(t *testing.T) {
 	t.Run("When CPF length does not match required length", func(t *testing.T) {
 		entries := []struct {
-			cpf  string
+			cpf string
 		}{
 			{""},
 			{"403644788"},
@@ -157,6 +159,52 @@ func TestFormat(t *testing.T) {
 			if got != entry.want {
 				t.Errorf("Expected formatted CPF to be '%v', but got '%v' instead", entry.want, got)
 			}
+		}
+	})
+}
+
+func TestGenerate(t *testing.T) {
+	t.Run("Should generate valid CPF when params are not provided", func(t *testing.T) {
+		generatedCpf, _ := Generate()
+
+		if len(generatedCpf) != 11 {
+			t.Errorf("Expected generated CPF to have length 11, but got '%v' instead", len(generatedCpf))
+		}
+
+		if !IsValid(generatedCpf) {
+			t.Errorf("Expected generated CPF(%v)to be valid", generatedCpf)
+		}
+	})
+
+	t.Run("Should generate valid CPF when state name or state code are provided", func(t *testing.T) {
+		entries := []struct {
+			input string
+		}{
+			{"RS"},
+			{"Rio Grande do Sul"},
+			{"RJ"},
+			{"Rio de Janeiro"},
+			{"ABC"}, // non-existent State Code or State Name
+		}
+
+		for _, entry := range entries {
+			got, _ := Generate(entry.input)
+
+			if len(got) != 11 {
+				t.Errorf("Expected generated CPF to have length 11, but got '%v' instead", len(got))
+			}
+
+			if !IsValid(got) {
+				t.Errorf("Expected generated CPF(%v)to be valid", got)
+			}
+		}
+	})
+
+	t.Run("Should return error when 2 or more parameters are provided", func(t *testing.T) {
+		_, err := Generate("RS", "SC")
+
+		if err == nil {
+			t.Errorf("Expected error to be '%v'", err.Error())
 		}
 	})
 }

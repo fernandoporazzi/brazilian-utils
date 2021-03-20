@@ -1,12 +1,14 @@
 package cpf
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
 	"strconv"
-	"errors"
 
+	"github.com/fernandoporazzi/brazilian-utils/data"
 	"github.com/fernandoporazzi/brazilian-utils/helpers"
+	"github.com/fernandoporazzi/brazilian-utils/utilities/states"
 )
 
 const (
@@ -42,6 +44,60 @@ func Format(cpf string) (string, error) {
 	}
 
 	return acc, nil
+}
+
+func Generate(params ...string) (string, error) {
+	paramsLength := len(params)
+
+	var stateCode string
+
+	if paramsLength > 1 {
+		return "", fmt.Errorf("Expected zero or one argument as State, received '%v'", paramsLength)
+	}
+
+	if paramsLength == 0 {
+		stateCode = helpers.GenerateRandomNumber(1)
+	} else {
+		state := params[0]
+		states := states.GetStates()
+
+		found := ""
+
+		for _, s := range states {
+			if s.Code == state || s.Name == state {
+				found = s.Code
+				break
+			}
+		}
+
+		if found == "" {
+			stateCode = helpers.GenerateRandomNumber(1)
+		} else {
+			stateCode = data.States[found].Code
+		}
+	}
+
+	baseCpf := helpers.GenerateRandomNumber(length-3) + stateCode
+
+	firstCheckDigitMod := helpers.GenerateChecksum(baseCpf, 10) % 11
+	var firstCheckDigit string
+
+	if firstCheckDigitMod < 2 {
+		firstCheckDigit = "0"
+	} else {
+		firstCheckDigit = strconv.Itoa(11 - firstCheckDigitMod)
+	}
+
+	secondCheckDigitMod := helpers.GenerateChecksum(baseCpf+firstCheckDigit, 11) % 11
+	var secondCheckDigit string
+
+	if secondCheckDigitMod < 2 {
+		secondCheckDigit = "0"
+	} else {
+		secondCheckDigit = strconv.Itoa(11 - secondCheckDigitMod)
+	}
+
+	return baseCpf + firstCheckDigit + secondCheckDigit, nil
 }
 
 func isValidFormat(cpf string) bool {
