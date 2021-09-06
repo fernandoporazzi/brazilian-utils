@@ -1,6 +1,9 @@
 package boleto
 
-import "testing"
+import (
+	"testing"
+	"time"
+)
 
 func TestIsValid(t *testing.T) {
 	entries := []struct {
@@ -109,4 +112,64 @@ func TestFormat(t *testing.T) {
 			t.Errorf("Expected formatted boleto to be '%v', but got '%v'", want, got)
 		}
 	})
+}
+
+func TestGetValueInCents(t *testing.T) {
+	entries := []struct {
+		boleto string
+		want   int
+	}{
+		{"", 0},
+		{"00190000090114971860168524522114775860000102656", 0}, // invalid boleto
+		{"00190000090114971860168524522114675860000102656", 102656},
+		{"0019000009 01149.718601 68524.522114 6 75860000102656", 102656}, // boleto with mask
+	}
+
+	for _, entry := range entries {
+		got := GetValueInCents(entry.boleto)
+
+		if got != entry.want {
+			t.Errorf("Expected Boleto '%v' to have value %v, but got %v", entry.boleto, entry.want, got)
+		}
+	}
+}
+
+func TestGetBankCode(t *testing.T) {
+	entries := []struct {
+		boleto string
+		want   string
+	}{
+		{"", ""},
+		{"00190000090114971860168524522114775860000102656", ""}, // invalid boleto
+		{"00190000090114971860168524522114675860000102656", "001"},
+		{"0019000009 01149.718601 68524.522114 6 75860000102656", "001"},
+	}
+
+	for _, entry := range entries {
+		got := GetBankCode(entry.boleto)
+
+		if got != entry.want {
+			t.Errorf("Expected Boleto '%v' to have bank code %v, but got %v", entry.boleto, entry.want, got)
+		}
+	}
+}
+
+func TestGetExpirationDate(t *testing.T) {
+	entries := []struct {
+		boleto string
+		want   time.Time
+	}{
+		{"", time.Time{}},
+		{"00190000090114971860168524522114775860000102656", time.Time{}}, // invalid boleto
+		{"00190000090114971860168524522114675860000102656", time.Date(2018, time.June, 15, 0, 0, 0, 0, time.UTC)},
+		{"0019000009 01149.718601 68524.522114 6 75860000102656", time.Date(2018, time.June, 15, 0, 0, 0, 0, time.UTC)},
+	}
+
+	for _, entry := range entries {
+		got := GetExpirationDate(entry.boleto)
+
+		if got != entry.want {
+			t.Errorf("Expected Boleto '%v' to have expiration date %v, but got %v", entry.boleto, entry.want, got)
+		}
+	}
 }
