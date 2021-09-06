@@ -5,6 +5,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/fernandoporazzi/brazilian-utils/helpers"
 )
@@ -194,4 +195,57 @@ func Format(boleto string) string {
 	}
 
 	return acc
+}
+
+func GetValueInCents(boleto string) int {
+	if !IsValid(boleto) {
+		return 0
+	}
+
+	digits := helpers.OnlyNumbers(boleto)
+
+	value, err := strconv.Atoi(digits[len(digits)-10:])
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return value
+}
+
+func GetBankCode(boleto string) string {
+	if !IsValid(boleto) {
+		return ""
+	}
+
+	return boleto[0:3]
+}
+
+func GetExpirationDate(boleto string) time.Time {
+	if !IsValid(boleto) {
+		return time.Time{}
+	}
+
+	daysSinceBaseDayStartIndex := 14
+	daysSinceBaseDayEndIndex := 10
+
+	daysSinceBaseDay, err := strconv.Atoi(boleto[len(boleto)-daysSinceBaseDayStartIndex : len(boleto)-daysSinceBaseDayEndIndex])
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	oneDayMilliseconds := 24 * 60 * 60 * 1000
+	millisecondsSinceBaseDay := daysSinceBaseDay * oneDayMilliseconds
+
+	dateSinceBaseDay := time.Unix(0, int64(millisecondsSinceBaseDay)*int64(time.Millisecond))
+
+	bancoCentralBaseDate, err := time.Parse("2006-01-02", "1997-09-07")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	bancoCentralBaseDateMilliseconds := bancoCentralBaseDate.UnixNano() / int64(time.Millisecond)
+
+	return dateSinceBaseDay.Add(time.Millisecond * time.Duration(bancoCentralBaseDateMilliseconds)).UTC()
 }
